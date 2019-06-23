@@ -1,0 +1,135 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//				ORT BRAUDE COLLAGE			OPERATING SYSTEMS
+//				
+//				LAB 10 QUESION NUMBER 1:
+// 
+//				WRITTINE BY : REHAM ABASS
+//				DATE: 17.06.2019
+//  
+// < LIBRARIES.h > :							
+//
+#include<stdio.h>			// FOR INPUT OUTPUT 
+#include<stdlib.h>			//FOR ALLOCATION WILL BE MADE AFTER KNOWING N - NUMBER OF PHILOSOPHERS
+#include<pthread.h>			//EACH PHILOSOPHER GONNA HAD IT'S THREAD
+#include<semaphore.h>		//SEMAPHORES FOR EACH PHILOSOPHER & MUTEX FOR CRITICAL BLOCK 
+#include<unistd.h>			//??
+#include<assert.h>			//?
+#include<time.h>			// RANDOM TIMER FOR USLEEP() 
+#include<string.h>			//SCANF STRING , USING ATOI() , 
+// CONSTANT VARIABLES:
+						
+#define LEFT (i-1)%n		//MACRO CALCULATES INDEX OF LEFT NEIGHBOR ,BECAUSE THEY SET ON ROUND TABLE
+#define RIGHT (i+1+n)%n		//MACRO CALCULATES INDEX OF RIGHT NEIGHBOR ,BECAUSE THEY SET ON ROUND TABLE
+
+
+#define MAX_TIME 5			// FOR RANDOM TIME FOR USLEEP() BETWWEN 0 AND 4
+// STATES OF PHILOSOPHERS:
+#define THINKING 0			//THINKING STATE OF PHILOSOPHER =	0
+#define HUNGRY   1			//HUNGRY STATE OF PHILOSOPHER =		1
+#define EATING   2			//EATING STATE OF PHILOSOPHER =		2
+
+
+//GLOBAL VARIABLES:
+// WHY TO USE GLOBAL VARIABLES? BECAUSE THEY WILL BE USED IN MANY THREADS IN THE SAME TIME.
+
+int N ;							//NUMBER OF PHILOSOPHERS ,GETTING IT IN RUNNING TIME 
+sem_t* mutex = NULL;			// POINTER TO SEMAPHORE ON CRITICAL CODE BLOCK,GONNA BE BINARY COUNTER (0 OR 1 ONLY)
+sem_t* eaters_semaphores = NULL;//WILL BE ALLOCATED AFTER KNOWING NUMBER OF PHILOSOPHERS ON RUNNING TIME
+int *state_array = NULL;		//ARRAY OF SEMAPHORES, EACH PHILOSOPHER HAS STATE : THINKING OR HUNGRY OR EATING
+
+// FUNCTION 1: 
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//FUNCTION 2:
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////
+// FUNCTION 3: 
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//FUNCTION 4:
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////
+//PRIMARY FUNCTION  -  MAIN :
+
+int main(int argc , char* argv[]){ 		// argv[1] = MUST BE NUMBER OF PHILOSOPHERS
+
+	//FIRST OF ALL  - WE NEED NUMBER OF PHILOSOPHERS
+	if(argc != 2 ){printf(stderr, "Usage: %s <NUMBER_OF_PHILOSOPHERS>\n", argv[0]); return 1;}
+	N = atoi(argv[1]);					// N IS A GLOBAL INT VARIABLE
+  
+
+
+
+     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		void*  result;
+   
+        if (N <= 1){fprintf(stderr,"Error by transformation of the argument...\n"); return 2;}//?? ???? ?-2 ?????????
+ 
+        mutex = (sem_t*)malloc(sizeof(sem_t));
+        if (sem_init(mutex, 0, 1) != 0) { //?????? ?????? ?????? ?????? ???? ?????
+                fprintf(stderr, "Error by creating semaphore...\n");        return 3;
+        }
+ 
+       // eaters = _________________//????? ?????? ????? ??????? - ??? ??????? ?????
+      //  state = __________________ //????? ?????? ????? ?????, ?? ??? ????? ??? ??????? ????? (???, ????,????     
+        
+
+		// AFTER ALLOCATING THE ARRAY OF STATES , MUST BE INIATED TO ALL PHILOSOFERS:
+        memset(state, 0, N);		//INIATING STATE OF ALL OF PHILOSOPHERS =THINKING = 0 
+ 
+
+        srand(time(NULL));			//
+        pthread_t *philosophers = (pthread_t*)malloc(N * sizeof(pthread_t)); //????? ?????? ?????? ??? ???? ??????????
+ 
+        int i;
+        for (i = 0; i < N; i++) {
+                if (sem_init(&eaters[i], 0, 0) != 0) {  //??????? ??????? ?? ?????????
+                        fprintf(stderr, "Error by creating semaphore...\n");           return 3;
+                }
+        }
+        
+        for (i = 0; i < N; i++) {
+                if (pthread_create(&philosophers[i], NULL, philosopher, (void*)&i) != 0) { 
+                        fprintf(stderr, "Error by creating thread\n");            return 2;
+                }
+       	   usleep(100000); 
+       }
+        
+    for (i = 0; i < N; i++) {
+          if (pthread_join(philosophers[i], &result) != 0) {
+fprintf(stderr, "Error by joining thread\n");  	
+return 3;
+          }
+
+
+
+
+
+
+
+
+
+return 0;
+}
