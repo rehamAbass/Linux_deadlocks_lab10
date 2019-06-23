@@ -1,33 +1,40 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//				ORT BRAUDE COLLAGE			OPERATING SYSTEMS
+//
+//				ORT BRAUDE COLLAGE	
+//		
+//				OPERATING SYSTEMS
 //				
-//				LAB 10 QUESION NUMBER 1:
+//				LAB 10 QUESTION NUMBER 1:
 // 
-//				WRITTINE BY : REHAM ABASS
+//				WRITTIEN BY :	"	REHAM ABASS	" .
+//
 //				DATE: 17.06.2019
-//  
-// < LIBRARIES.h > :							
+//
+//		THE PHILOSOPHERS PROBLEM : 
+//			N PHILOSOPHERS SEAT ON ROUND TABLE , THEY CAN THINK,BE HUNGRY, EAT.
+//  		THE ONLY CONDITION : EACH TWO NEIGHBORS CAN'T EAT IN THE SAME TIME BEACUSE THERE IS ONE STICK BETWEEN EACH TWO OF THEM.
+//			SO HOW AWE ARE GOING TO ORDER THE EATING PROBLEM BETWEEN THEM, WHILE PASSING EACH ONE IN THE THREE STATES(THINK,EAT,BE HUNGRY)? 
+//			BY USING SEMAPHORES ,DEADLOCKS, MUTEX,THREADS.
+//		< LIBRARIES.h > :							
 //
 #include<stdio.h>			// FOR INPUT OUTPUT 
 #include<stdlib.h>			//FOR ALLOCATION WILL BE MADE AFTER KNOWING N - NUMBER OF PHILOSOPHERS
 #include<pthread.h>			//EACH PHILOSOPHER GONNA HAD IT'S THREAD
 #include<semaphore.h>		//SEMAPHORES FOR EACH PHILOSOPHER & MUTEX FOR CRITICAL BLOCK 
-#include<unistd.h>			//??
-#include<assert.h>			//?
+#include<unistd.h>			//IT DEFINES SYMBOLIC CONSTANS 
+#include<assert.h>			//DEFINIG MACROS IN THIS LAB.
 #include<time.h>			// RANDOM TIMER FOR USLEEP() 
 #include<string.h>			//SCANF STRING , USING ATOI() , 
-// CONSTANT VARIABLES:
+
+//		CONSTANT VARIABLES:
 						
 #define LEFT (i-1)%n		//MACRO CALCULATES INDEX OF LEFT NEIGHBOR ,BECAUSE THEY SET ON ROUND TABLE
 #define RIGHT (i+1+n)%n		//MACRO CALCULATES INDEX OF RIGHT NEIGHBOR ,BECAUSE THEY SET ON ROUND TABLE
-
-
 #define MAX_TIME 5			// FOR RANDOM TIME FOR USLEEP() BETWWEN 0 AND 4
-// STATES OF PHILOSOPHERS:
+// 		STATES OF PHILOSOPHERS:
 #define THINKING 0			//THINKING STATE OF PHILOSOPHER =	0
 #define HUNGRY   1			//HUNGRY STATE OF PHILOSOPHER =		1
 #define EATING   2			//EATING STATE OF PHILOSOPHER =		2
-
 
 //GLOBAL VARIABLES:
 // WHY TO USE GLOBAL VARIABLES? BECAUSE THEY WILL BE USED IN MANY THREADS IN THE SAME TIME.
@@ -36,30 +43,39 @@ int N ;							//NUMBER OF PHILOSOPHERS ,GETTING IT IN RUNNING TIME
 sem_t* mutex = NULL;			// POINTER TO SEMAPHORE ON CRITICAL CODE BLOCK,GONNA BE BINARY COUNTER (0 OR 1 ONLY)
 sem_t* eaters_semaphores = NULL;//WILL BE ALLOCATED AFTER KNOWING NUMBER OF PHILOSOPHERS ON RUNNING TIME
 int *state_array = NULL;		//ARRAY OF SEMAPHORES, EACH PHILOSOPHER HAS STATE : THINKING OR HUNGRY OR EATING
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTION 1: 
 
+void eat(int i) {										//JUST PRINT AND WAIT 
+        int time = rand() % MAX_TIME;					//RANDOM TIME BETWEEN 0..4
+        printf("Philosopher #%d is eating...\n", i + 1);
+        sleep(time);									//LOOKS LIKE REALITY, HE TAKES TIME TO EAT.
+        printf("Philosopher #%d stopped eating...\n", i + 1);
+}
 
-
-
-
-////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 //FUNCTION 2:
 
-
-
-
-
-
-
+void think(int i) {										//JUST PRINT AND WAIT
+        int time = rand() % MAX_TIME;					//RANDOM TIME BETWEEN 0..4
+        printf("Philosopher #%d is thinking...\n", i + 1);
+        sleep(time);									//THINKING TAKES SOME SECONDS,WHILE OTHERS EATING
+}
 
 /////////////////////////////////////////////////////////////////////////////////
 // FUNCTION 3: 
-
-
-
-
-
+// CHECK IF PHILOSOPHER IS HUNGRY :
+void test(int i) {
+	sem_wait(&eaters_semaphores[i]);		//CHECK SMAPHORE==0 ? his semaphore --	
+			//LOCK SEMAPHORE OF THIS PHILOSOPHER.BECAUSE WE ALREADY DEALING WITH HIM IN THIS THREAD.
+	if(state[i] == HUNGRY && state[LEFT] != EATING && state[RIGHT] != EATING ){
+			 //CHECK IF 	" STICKERS ARE FREE "	 SO HE CAN USE THEM TO EAT 
+			//MEANS CHECKE IF HIS NEIGHBERS STATES (LEFT AND RIGHT) AREN'T EATING!
+		state[i]=EATING;    				//UPDATING HIS STATE TO EATING
+		sem_post(&eaters_semaphores[i]); 	//UNLOCK HIS SEMAPHORE while he is eating
+			//his semaphore ++.
+	} 		// END OF IF.	
+}
 ////////////////////////////////////////////////////////////////////////////////
 //FUNCTION 4:
 
@@ -71,7 +87,7 @@ int *state_array = NULL;		//ARRAY OF SEMAPHORES, EACH PHILOSOPHER HAS STATE : TH
 
 
 /////////////////////////////////////////////////////////////////////////////////
-//PRIMARY FUNCTION  -  MAIN :
+//PRIMARY FUNCTION  :  MAIN :
 
 int main(int argc , char* argv[]){ 		// argv[1] = MUST BE NUMBER OF PHILOSOPHERS
 
