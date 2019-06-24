@@ -4,7 +4,7 @@
 //		
 //				OPERATING SYSTEMS
 //				
-//				LAB 10 QUESTION NUMBER 1:
+//				LAB 10 QUESTION NUMBER 2:
 // 
 //				WRITTIEN BY :	"	REHAM ABASS	" .
 //
@@ -45,17 +45,27 @@ int N ;							//NUMBER OF PHILOSOPHERS ,GETTING IT IN RUNNING TIME
 sem_t* mutex = NULL;			// POINTER TO SEMAPHORE ON CRITICAL CODE BLOCK,GONNA BE BINARY COUNTER (0 OR 1 ONLY)
 sem_t* eater_semaphores = NULL;//WILL BE ALLOCATED AFTER KNOWING NUMBER OF PHILOSOPHERS ON RUNNING TIME
 int *state = NULL;				//ARRAY OF SEMAPHORES, EACH PHILOSOPHER HAS STATE : THINKING OR HUNGRY OR EATING
+int *array = NULL;
+int count1,countN ;
+int *countTH;					//counts number of times we got "thinking" for the same philosoph ,so we don't print the same message on screen
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FUNCTION 1: 
 void eat(int i) {									//JUST PRINT AND WAIT 
-        int time = rand() % MAX_TIME;				//RANDOM TIME BETWEEN 0..4
+        int time = rand() % MAX_TIME;				//RANDOM TIME BETWEEN 0..4		
         printf("Philosopher #%d is eating...\n", i + 1);
+		
+		if(count1 == 1 && countN == 1){
+			printf("\n\n 1 and %d are eating in the same time!\n", N);
+			}
         sleep(time);								//LOOKS LIKE REALITY, HE TAKES TIME TO EAT.
-        printf("Philosopher #%d stopped eating...\n", i + 1);
+        printf("Philosopher #%d stopped eating...\n", i + 1);	
+	countTH[i]=0;
 }
 //////////////////////////////////////////////////////////////////////////////
 //FUNCTION 2:
 void think(int i) {									//JUST PRINT AND WAIT
+
+		countTH[i]++;
         int time = rand() % MAX_TIME;				//RANDOM TIME BETWEEN 0..4
         printf("Philosopher #%d is thinking...\n", i + 1);
         sleep(time);								//THINKING TAKES SOME SECONDS,WHILE OTHERS EATING
@@ -80,7 +90,8 @@ void test(int i) {
 void take_sticks(int i) {	
 	//LOCK CRITICAL CODE BY MUTEX,SO THE SAME STICKS(AT THE SAME TIME) CAN'T BE TAKEN BY MORE THAN ONE PHILOSOPHER 
 	sem_wait(mutex);						//actually it's a pointer to semaphore
-	state[i]=HUNGRY;		
+	state[i]=HUNGRY;
+	printf("Philosopher #%d is thinking...\n", i + 1);		
 	test(i);								//TRIES TO TAKE TWO STICKS BY  TEST-FUNCTION
 	sem_post(mutex);						//UNLOCK CRITICAL CODE
 	sem_wait(&eater_semaphores[i]);	
@@ -101,13 +112,33 @@ void put_sticks(int i) {
 //	THIS FUNCTION OPERATES BY ALL THE THREADS WHICH ARE DEALLING WITH PHILOSOPHERS
 void* philosopher(void* arg) {
         int i = *((int*)arg);				//CONVERTING INDEX OF PHILOSOPHER
+	
+
 		while (1 == 1) {					// INFINTE LOOP
-			think(i);						// FIRST OF ALL: PHILOSOPHER MUST "	THINK	"	
-			take_sticks(i);					//PHILOS' TRIES TO TAKE THE STICKS
-			eat(i);							//EAT	
-			put_sticks(i);					//PUT STICKERS
+					
+					if(countTH[i] == 0)
+						think(i);						// FIRST OF ALL: PHILOSOPHER MUST "	THINK	"
+					
+						
+					if(i == 0 ) 
+						count1++;
+					if(i == (N-1))
+						countN++;
+					if(count1 == 1 && countN == 1){
+
+						}
+					else{
+
+					take_sticks(i);					//PHILOS' TRIES TO TAKE THE STICKS
+					eat(i);							//EAT	
+					put_sticks(i);					//PUT STICKERS
+
+					}
+					if(i == 0 ) count1--;
+					if(i == (N-1))countN--;
 		}
-	}	
+
+}
 	
 /////////////////////////////////////////////////////////////////////////////////
 											//PRIMARY FUNCTION  :  MAIN :
@@ -120,6 +151,10 @@ int main(int argc , char* argv[]){ 			// argv[1] = MUST BE NUMBER OF PHILOSOPHER
         if (N <= 1){fprintf(stderr,"Error by transformation of the argument...\n"); return 2;}//?? ???? ?-2 ????????? 		
 		//void* result;
    		int i;
+
+		count1=0;
+		countN=0; 
+
 
 	//ALLOCATIONS AND INIATIONS:
 
@@ -146,10 +181,33 @@ int main(int argc , char* argv[]){ 			// argv[1] = MUST BE NUMBER OF PHILOSOPHER
 	//INIATE ALL THE SEMAPHORES OF ALL OF THE PHILOSOPHERS
         for (i = 0; i < N; i++) {
                 if (sem_init(&eater_semaphores[i], 0, 0) != 0){fprintf(stderr, "Error by creating semaphore...\n");return 3;}
-			}		
+			}	
+
+
+//allocate and iniate  array of counters:
+
+	       int *countTH= (int*)malloc(N * sizeof(int)); 
+ 		if(countTH == NULL){
+			printf("\nCan't allocate array of counts\n"); exit(-1);}
+        for (i = 0; i < N; i++) {
+                countTH[i]=0;
+			}	
+
+
+
+	
+
+	//ALLOCATE ARRAY OF INTEGERS FOR THE threads and iniate it :
+
+    	array = (int*)malloc(N * sizeof(int));
+		if(array == NULL){printf("\nCan't allocate array");exit(-1);}
+		 for (i = 0; i < N; i++) {
+				array[i]=i;
+			}
+
 	//CREAT THREADS FOR EACH PHILOSOPHER AND RUN IT'S FUNCTION BY THIS THREAD
         for (i = 0; i < N; i++) {
-                if (pthread_create(&philosophers[i], NULL, philosopher, (void*)&i) != 0) {fprintf(stderr, "Error by creating thread\n");return 2;}
+                if (pthread_create(&philosophers[i], NULL, philosopher, (void*)&array[i]) != 0) {fprintf(stderr, "Error by creating thread\n");return 2;}
        	   usleep(100000);  				// WAIT 100000 MILI SICONDS BETWEEN EACH THREAD CREATING
        }									// IN USLEEP(10^6) MEANS 1 SECOND
 
