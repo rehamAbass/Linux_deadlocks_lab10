@@ -1,0 +1,7 @@
+
+//MUST KNOW :
+//WHEN WE NEED TO USE SLEEP IN  THREADS  :
+
+//#include<time.h>
+
+// usleep(1000000); =IS THE SAME AS=   sleep(1);
