@@ -1,0 +1,103 @@
+
+//											WRITTEN BY: "	REHAM ABASS	"
+
+#include<stdio.h>				
+#include<stdlib.h>				
+#include<semaphore.h>			
+#include<time.h>				
+#include<pthread.h>				
+#include<string.h>				
+/*
+#define KARMAIL 0
+#define TBERIA	1
+#define HAIFA	2
+#define TSFAT	3
+*/
+
+
+sem_t * NOpri= NULL ;		
+int *array_i = NULL ;		
+sem_t city[4];			
+
+/////////////////////////////////////////////////////////////////////
+void Calls(int a , int b){
+printf("\n in Calls:\n");
+	//if(a > 1  && b > 1) sem_wait(NOpri); //not in meeting =0 false
+	printf("%d started to talk with %d\n",a,b);
+	usleep(50000);
+	printf("%d finished to talk with%d\n",a,b);
+	//if(a >1 && b > 1) {sem_post(NOpri);} // not in meeting =1 true
+}
+
+
+////////////////////////////////////////////////////////////////////
+
+void * Func( void * index){
+	
+	int a=*(int*)index;		
+	int b = a;
+	int *value=NULL;
+	sem_wait(&city[a]);
+
+	printf("\nFunc with city =  %d\n", a);
+		
+					while(1){
+						b = rand()%4;	
+						printf("\tcheck city b = %d ?:\n",b);
+						if((0 != sem_getvalue(&city[b],value)) || ( *value == 0 ) )	continue; //pick another city, includes a==b
+						if((*value) == 1)break;
+						} 
+						printf("\ncity b = %d .\n",b);
+						//found a city			
+				sem_wait(&city[b]); //reserve it !
+
+				if(a > 1  && b > 1) sem_wait(NOpri); //not in meeting =0 false
+				
+				Calls(a, b);
+
+				if(a >1 && b > 1) {sem_post(NOpri);} // not in meeting =1 true
+	
+
+sem_post(&city[b]);
+
+
+sem_post(&city[a]);
+return ;
+}		
+	
+//////////////////////////////////////////////////////////////////
+int main( int argc , char*argv[]){
+	int i;
+	array_i	= (int *)malloc(4*sizeof(int));
+	if(array_i == NULL){printf("\nCan't allocate array of indexes\n");exit(-1);}
+	for( i=0 ; i< 4 ; i++){		
+		array_i[i]=i;			
+		}
+
+	NOpri = (sem_t *)malloc(sizeof(sem_t));	
+	if(NOpri == NULL){printf("\nCan't creat pri semaphore!"); exit(-1);}
+	
+//they are not  in meeting (3 and 2) high priority cities 	
+	sem_init(NOpri , 0, 1);   // first there no body in meeting especially 2 and 3
+	
+	
+	for(i=0 ; i<4 ;i++)
+		sem_init(&city[i] ,0 ,1);
+	
+
+	pthread_t *array_threads = (pthread_t *)malloc(4*sizeof(pthread_t));
+	if(array_threads == NULL){printf("\nCan't allocate threads\n");exit(-1);}
+	for( i=0 ; i< 4 ; i++){
+		pthread_create( &array_threads[i] ,NULL ,Func ,(void*)&array_i[i] );
+		}
+
+	for( i=0 ; i< 4 ; i++){		// waiting for all threads to finish 
+		pthread_join(array_threads[i] ,NULL);
+		printf("\njoin thread	%d\n", i);
+		}
+	sleep(20);	
+	free(array_threads);		
+	free(array_i);				
+	return 0;
+}
+/////////////////////////////////////////////////////////////////////
