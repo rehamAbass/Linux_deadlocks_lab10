@@ -1,0 +1,146 @@
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////		ORT BRAUDE COLLAGE
+//					LAB 10 QUESTION NUMBER 1:
+//
+//					WRITTEN BY: "	REHAM ABASS	"
+//
+//					DATE: 	17.06.2019
+//					SEMAPHORES AND DEAD LOCKES:
+/*
+SOME DESCRIPTION: 
+					conditions:
+					1.  city can call just another city in the same time , only calls one!
+					2. each city must be in contact with all the others cities.
+					3.  try to do all the calls in parallel style . exmpl [city 1 calls city 2 , in the same time city 3 calls city 4]
+					4.  must use semaphores and maybe deadlocks, to order their calls.
+
+					//////////////////////////////////////////////////////////////////////////////////////////////////////////
+*/
+// LIBRARIES:
+#include<stdio.h>				// for input & Output
+#include<stdlib.h>				//for allocations
+#include<semaphore.h>			//for using semaphores , deadlockes ,mutex, and their functions.
+#include<time.h>				//for random numbers and sleep
+#include<pthread.h>				//for creating threads anf their functions..
+#include<string.h>				//for using strings and scanf..
+//DEFINITIONS :
+#define KARMAIL 0
+#define TBERIA	1
+#define HAIFA	2
+#define TSFAT	3
+
+//Global variables:
+sem_t * mutex = NULL ;		//DEADLOCK Binary semaphore 
+int *array_i = NULL ;		//for the threads ,they got the address of the index , but it's value gonna change each pthread create
+sem_t city[4];				//semaphore for each city
+///////////////////////////////////////////////////////////////////
+
+void Calls(int a , int b){
+printf("\n in Calls:\n");
+	sem_wait(mutex);	
+	
+	printf("%d started to talk with %d\n",a,b);
+	usleep(500000);
+	printf("%d finished to talk with%d\n",a,b);
+	
+	sem_post(mutex);
+}
+///////////////////////////////////////////////////////////////////
+void * Func( void * index){
+		//each thread call the function "	Func" randomaly take City number
+		// this function gonna call the function "	Calls"
+				
+	int a=*(int*)index;		//converting the index of the city
+	int b = a;
+	int *value;
+	sem_wait(&city[a]);
+
+	printf("\nFunc with city =  %d\n", a);
+	do{
+		b = rand()%4;		
+		if( a == b) continue;	
+		
+		if(0 != sem_getvalue(&city[b],value))	continue;
+		if(*value == 1) { 
+			printf("\nRandom check city =  %d her value =	%d\n", b ,*value);
+			break;
+			}
+		}while(1);		
+	
+
+	if(	( (a ==  HAIFA) && (b == TSFAT ) )	||	 ( (a ==  TSFAT)&& (b == HAIFA) )	){
+		//lock the semaphores of low priority !! 
+		usleep(400000);
+		sem_wait(&city[TBERIA]);
+		sem_wait(&city[KARMAIL]);
+		}
+
+	sem_wait(&city[b]);
+
+	Calls(a, b);				
+
+
+	if(	( (a ==  HAIFA) && (b == TSFAT ) )	||	 ( (a ==  TSFAT)&& (b == HAIFA) )	){
+		//release the semaphores of low priority !! 
+		sem_post(&city[TBERIA]);
+		sem_post(&city[KARMAIL]);
+		}	
+
+	//sem_post(&city[b]);
+	//sem_post(&city[a]);
+
+		sem_post(&city[a]);
+		sem_post(&city[b]);
+
+
+		/*
+		another way  : if(sem_TSFAT is on && sem_HAIFA is on) // so don't let calls between others
+
+
+		 CONVERSATIONS OF THE CITIES MUST BE IN THE SAME TIME IN THREADS [	|| IN PARALLEL ||	]
+		 IN  "TSFAT"  AND " HAIFA " HAVE HEIGHR PRIORITIES . 
+		  THATS MEANS: THE OTHRS CAN'T CALL EACHOTHER / OR THEM  WHEN THEY ARE IN MEETING TOGETHER !!!!
+		 IF tBERIA AND KARMAIL ARE IN MEETING , THE OTHERS WHICH ARE IN HEIGH PRIORIY CAN BE GO TO MEET IN THE SAME TIME
+		*/
+}			
+//////////////////////////////////////////////////////////////////
+int main( int argc , char*argv[]){
+			// main must creat 4 threads , each one for each city
+	int i;
+
+	array_i	= (int *)malloc(4*sizeof(int));
+	if(array_i == NULL){printf("\nCan't allocate array of indexes\n");exit(-1);}
+	 
+	for( i=0 ; i< 4 ; i++){		// because of the threads , using of &i won't be correct , i change all the time
+		array_i[i]=i;			//so we prefer to use pointer to index, each index has another pointer
+		}
+
+	//ALLOCATE  and iniate SEMAPHORES:
+	mutex = (sem_t *)malloc(sizeof(sem_t));	
+	if(mutex == NULL){printf("\nCan't creat mutex semaphore!"); exit(-1);}
+	
+	sem_init(mutex , 0, 1);		// iniating the semaphore with 0 which means: we don't know if there a meeting between HAIFA && TSFAT
+
+
+	sem_init(&city[0] , 0 ,1);
+	for(i=1 ; i<4 ;i++)
+		sem_init(&city[i] , 0 ,0);
+	
+
+	//Allocating  and creating threads:
+	pthread_t *array_threads = (pthread_t *)malloc(4*sizeof(pthread_t));
+	if(array_threads == NULL){printf("\nCan't allocate threads\n");exit(-1);}
+	for( i=0 ; i< 4 ; i++){
+		pthread_create( &array_threads[i] ,NULL ,Func ,(void*)&array_i[i] );
+		}
+
+	for( i=0 ; i< 4 ; i++){		// waiting for all threads to finish 
+		pthread_join(array_threads[i] ,NULL);
+		printf("\njoin thread	%d\n", i);
+		}
+	sleep(20);	
+	free(array_threads);		//must free all the allocated memoray
+	free(array_i);				//must free all the allocated memoray
+	return 0;
+}
+/////////////////////////////////////////////////////////////////////
